@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BinTrack</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2f5d3a">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%232f5d3a%22/%3E%3Cpath d=%22M16 4.5l9.5 6.5h-19z%22 fill=%22%238a939e%22/%3E%3Crect x=%227%22 y=%2211%22 width=%2218%22 height=%2215%22 fill=%22%23c3cad1%22/%3E%3Cpath d=%22M7 15.5h18M7 20h18M7 24.5h18%22 stroke=%22%2398a1ab%22 stroke-width=%221.2%22/%3E%3Crect x=%225%22 y=%2226%22 width=%2222%22 height=%222.4%22 rx=%221%22 fill=%22%238a939e%22/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eceee6;--panel:#fbfcf8;--ink:#1d2a22;--mute:#5f6d62;--line:#cdd4c3;--accent:#2f5d3a;--accentink:#fff;--map:#d8e0c6;--grid:#c6cfb2;--danger:#a5301f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121813;--panel:#1b241d;--ink:#e5ebe2;--mute:#9aa89c;--line:#2f3b31;--accent:#7fc08a;--accentink:#0f1a11;--map:#222c23;--grid:#2c382d;--danger:#ff8b78}}
+:root[data-theme="dark"]{--bg:#121813;--panel:#1b241d;--ink:#e5ebe2;--mute:#9aa89c;--line:#2f3b31;--accent:#7fc08a;--accentink:#0f1a11;--map:#222c23;--grid:#2c382d;--danger:#ff8b78}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 Barlow,system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+h1{font:700 26px/1 "Barlow Condensed",Barlow,sans-serif;margin:0;letter-spacing:.01em}
+.bar{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input,textarea{font:inherit;color:inherit}
+button{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accentink);border-color:var(--accent);font-weight:600}
+button.danger{color:var(--danger);border-color:var(--danger)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{position:relative}
+.farmbar{display:flex;gap:8px;align-items:center;margin-left:auto}
+header select{width:auto;max-width:42vw}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{flex:none;display:block}
+.badge{font:600 12px Barlow,sans-serif;text-transform:uppercase;letter-spacing:.06em;background:var(--accent);color:var(--accentink);border-radius:99px;padding:3px 9px}
+#settings{max-height:calc(100vh - 140px);overflow:auto}
+.hist ul{margin:4px 0 0;padding-left:18px;color:var(--mute);font-size:14px}
+a.btn{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 12px;color:inherit;text-decoration:none}
+.farmctl{display:flex}
+.farmctl select{border-radius:6px 0 0 6px;border-right:0}
+.farmctl #fedit{border-radius:0 6px 6px 0;font-size:16px;padding:7px 11px}
+:root[data-theme="dark"]{color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light}
+#gear,#fedit{font-size:18px;line-height:1;padding:6px 10px}
+#settings,#farmpop{position:absolute;right:12px;top:calc(100% + 6px);z-index:30;width:min(320px,calc(100vw - 24px));background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 8px 30px rgba(0,0,0,.28)}
+#settings h2,#farmpop h2{font:700 22px/1.1 "Barlow Condensed",Barlow,sans-serif;margin:0 0 6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accentink);font-weight:600}
+main{display:grid;grid-template-columns:1fr 330px;gap:14px;padding:14px;align-items:start}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+#yard{height:70vh;min-height:340px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;width:100%;display:block;background:var(--map);border:1px solid var(--line);border-radius:8px}
+aside{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+aside h2{font:700 22px/1.1 "Barlow Condensed",Barlow,sans-serif;margin:0 0 10px}
+label{display:block;font-size:14px;color:var(--mute);margin:10px 0 3px}
+input,select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chips button{padding:3px 8px;font-size:14px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.35);vertical-align:-2px;margin-right:8px}
+table{width:100%;border-collapse:collapse}
+td{padding:6px 0;border-bottom:1px solid var(--line)}td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.hint{color:var(--mute);font-size:14px;margin:12px 0 0}
+.warn{color:var(--danger);font-size:14px;margin-top:4px}
+.actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+[hidden]{display:none!important}
+#photobar{position:fixed;left:0;right:0;bottom:calc(54px + env(safe-area-inset-bottom,0px));z-index:21;display:flex;justify-content:center;pointer-events:none;padding:0 10px 10px}
+.pbin{pointer-events:auto;width:100%;max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 8px 30px rgba(0,0,0,.28);display:grid;gap:2px}
+.pbin button{margin-top:10px}
+#sheetwrap{position:fixed;left:0;right:0;bottom:calc(54px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;justify-content:center;pointer-events:none;padding:0 10px 10px}
+body{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
+#tabs{position:fixed;left:0;right:0;bottom:0;z-index:25;display:flex;background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+#tabs button{flex:1;border:0;border-radius:0;padding:14px 8px;font-weight:600;color:var(--mute);background:transparent}
+#tabs button[aria-pressed=true]{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+body[data-view="list"] .bar{display:none}
+body[data-mode="home"] aside{display:none}
+body[data-mode="home"] main{grid-template-columns:1fr}
+#listv{padding:14px;max-width:760px;margin:0 auto}
+#listv h2{font:700 22px/1.1 "Barlow Condensed",Barlow,sans-serif;margin:0 0 10px}
+#listv ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.binrow{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;width:100%;text-align:left;padding:12px 14px;border-radius:10px}
+.binrow .sw{grid-row:1/3;margin:0;width:22px;height:22px}
+.binrow .bn{font-weight:700;font-size:18px}
+.binrow .bc{color:var(--mute);font-size:14px;grid-column:2}
+.binrow .bq{grid-row:1/3;grid-column:3;font-variant-numeric:tabular-nums}
+#sheet{pointer-events:auto;width:100%;max-width:520px;max-height:66vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 8px 30px rgba(0,0,0,.28)}
+#sheet h2{margin-bottom:0}
+body[data-mode="home"] [data-m="layout"]{display:none}
+body[data-mode="layout"] [data-m="home"]{display:none}
+.foot{position:sticky;bottom:-14px;background:var(--panel);display:flex;gap:8px;justify-content:flex-end;margin:14px 0 -2px;padding:10px 0 2px;border-top:1px solid var(--line)}
+.foot button{min-width:96px}
+svg text{font-family:Barlow,system-ui,sans-serif;pointer-events:none}
+</style>
+</head>
+<body data-mode="home" data-view="map">
+<header>
+  <h1 class="brand"><svg class="logo" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="BinTrack logo"><rect width="32" height="32" rx="8" fill="#2f5d3a"/><path d="M16 4.5l9.5 6.5h-19z" fill="#8a939e"/><rect x="7" y="11" width="18" height="15" fill="#c3cad1"/><path d="M7 15.5h18M7 20h18M7 24.5h18" stroke="#98a1ab" stroke-width="1.2"/><rect x="5" y="26" width="22" height="2.4" rx="1" fill="#8a939e"/></svg><span id="ttl">BinTrack</span><span class="badge" data-m="layout">Editing</span></h1>
+  <div class="farmbar"><div class="farmctl"><select id="farm" aria-label="Farm"></select><button id="fedit" aria-label="Edit farm" aria-expanded="false" aria-controls="farmpop">✎</button></div><button id="gear" aria-label="Settings" aria-expanded="false" aria-controls="settings">⚙</button></div>
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Zoom"><button id="zo" aria-label="Zoom out">&minus;</button><button id="zi" aria-label="Zoom in">+</button><button id="rc" aria-label="Recenter on yard">Recenter</button></div>
+    <button id="snap" data-m="layout"></button>
+    <button id="lockall" data-m="layout"></button>
+    <label style="margin:0" data-m="layout"><input id="bgfile" type="file" accept="image/*" hidden><button id="bgbtn" type="button">Yard photo</button></label>
+    <button id="undo" data-m="layout" disabled>Undo move</button><button id="padj" data-m="layout" hidden>Adjust photo</button><input id="addn" data-m="layout" type="number" min="1" max="20" value="1" aria-label="How many bins to add" style="width:64px"><button class="primary" id="add" data-m="layout">Add bin</button>
+    <button id="editlayout" data-m="home">Edit layout</button><button id="exitlayout" data-m="layout">Done editing</button>
+  </div>
+  <div id="settings" role="dialog" aria-label="Settings" hidden>
+    <h2>Settings</h2>
+    <label>Units</label>
+    <div class="seg" role="group" aria-label="Units"><button id="u-bu">Bushels</button><button id="u-t">Tonnes</button></div>
+    <label>Screen</label>
+    <div class="seg" role="group" aria-label="Screen theme"><button id="th-auto">Auto</button><button id="th-light">Light</button><button id="th-dark">Dark</button></div>
+    <label>Backup and reports</label>
+    <div class="actions" style="margin-top:4px"><button id="bk-save">Download backup</button><button id="bk-load">Restore backup</button></div>
+    <div class="actions" style="margin-top:8px"><button id="rp-csv">Bin report (CSV)</button><button id="rp-print">Printable report</button></div>
+    <input id="bk-file" type="file" accept=".json,application/json" hidden>
+    <p id="bk-msg" class="hint"></p>
+    <div class="actions"><button id="bug-open">Report a bug</button></div>
+    <div id="bugbox" hidden>
+      <label for="bug-text">What went wrong?</label><textarea id="bug-text" rows="4" placeholder="What did you tap, and what happened?"></textarea>
+      <div class="actions"><button id="bug-copy" class="primary">Copy report</button><a id="bug-mail" class="btn" href="#" target="_blank" rel="noopener">Email report</a></div>
+      <p id="bug-msg" class="hint"></p>
+    </div>
+    <div class="actions"><button id="s-close" class="primary">Close</button></div>
+  </div>
+  <div id="farmpop" role="dialog" aria-label="Edit farm" hidden>
+    <h2>Edit farm</h2>
+    <label for="s-name">Farm name</label><input id="s-name">
+    <div class="actions"><button id="s-rename" class="primary">Change name</button><button id="s-del" class="danger">Delete farm</button></div>
+  </div>
+</header>
+<main>
+  <svg id="yard" role="img" aria-label="Yard map of grain bins"><g id="gridg"></g><g id="bgg"></g><g id="binsg"></g></svg>
+  <aside id="panel"></aside>
+</main>
+<section id="listv" hidden aria-label="Bin overview"></section>
+<nav id="tabs" aria-label="Views"><button id="t-map" aria-pressed="true">Map</button><button id="t-list" aria-pressed="false">Bins</button></nav>
+<div id="photobar" hidden><div class="pbin"><strong>Adjust photo</strong><span class="hint" style="margin:0">Drag the map to move it</span>
+<label>Size: <span id="pb-sl"></span>%<input id="pb-s" type="range" min="20" max="500"></label>
+<label>Opacity<input id="pb-o" type="range" min="10" max="100"></label>
+<button id="pb-done" class="primary">Done</button></div></div>
+<div id="sheetwrap" hidden><div id="sheet" role="dialog" aria-label="Edit bin"></div></div>
+<script>
+const CROPS={Wheat:[60,'#e3b23c'],Durum:[60,'#c98a3b'],Canola:[50,'#efd53a'],Barley:[48,'#d6bf8a'],Oats:[34,'#cfcaa8'],Peas:[60,'#93c46c'],Lentils:[60,'#e08e6c'],Flax:[56,'#85abd0'],Soybeans:[60,'#b8c768'],Corn:[56,'#f2b95c'],Other:[60,'#bba7cc']};
+const EMPTY='#e8eae3',SNAP=30,G=30,LB_T=2204.62,KEY='binyard.v1',W=1000,H=640;
+const SIZES=[1000,2000,3000,5000,7500,10000,15000,30000];
+const def=()=>({unit:'bu',snap:true,farm:1,farms:[{id:1,name:'Farm 1',bg:null,view:{x:-40,y:-40,z:1},bins:[
+ {id:1,name:'Bin 1',type:'hopper',cap:5000,x:200,y:200,locked:false,crop:'Wheat',qty:4200,variety:'',grade:'',notes:''},
+ {id:2,name:'Bin 2',type:'round',cap:3000,x:380,y:200,locked:false,crop:'Canola',qty:3000,variety:'',grade:'',notes:''},
+ {id:3,name:'Bin 3',type:'round',cap:10000,x:300,y:410,locked:false,crop:'',qty:0,variety:'',grade:'',notes:''}]}]});
+let S;try{const o=JSON.parse(localStorage.getItem(KEY));
+ if(o&&o.farms)S=o;else if(o&&o.bins)S={unit:o.unit,snap:o.snap,farm:1,farms:[{id:1,name:'Farm 1',bg:o.bg||null,bins:o.bins,view:{x:-40,y:-40,z:1}}]};else S=def()}catch(e){S=def()}
+const F=()=>S.farms.find(f=>f.id===S.farm)||S.farms[0];
+let selId=null,drag=null,confirmDel=false,mode='home',view='map',sheetId=null,orig=null,isNew=null,tap=null,undoS=[],cropFilter='';
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id), svg=$('yard');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const wt=c=>CROPS[c]?CROPS[c][0]:60;
+const toU=(bu,c)=>S.unit==='bu'?bu:bu*wt(c)/LB_T;
+const fromU=(v,c)=>S.unit==='bu'?v:v*LB_T/wt(c);
+const fmt=(bu,c)=>toU(bu,c).toLocaleString(undefined,{maximumFractionDigits:S.unit==='bu'?0:1})+(S.unit==='bu'?' bu':' t');
+const num=v=>Math.round(v*100)/100;
+const rad=b=>10+Math.sqrt(b.cap)*.45;
+const col=b=>b.crop&&CROPS[b.crop]?CROPS[b.crop][1]:EMPTY;
+const sel=()=>F().bins.find(b=>b.id===selId);
+
+function draw(){
+  let h='';
+  F().bins.forEach(b=>{
+    const r=rad(b),z=V().z,fs=Math.max(Math.max(15,Math.min(24,r*.42)),Math.min(12/z,r*.6));
+    const lines=[b.name,b.crop||'Empty'];
+    const sz=lines.map((t,i)=>Math.max(8,Math.min(i?fs*.85:fs,(2*r*.84)/(Math.max(3,t.length)*.56))));
+    const tot=sz.reduce((a,x)=>a+x*1.2,0);let yy=-tot/2;
+    const ys=sz.map(x=>{const y=yy+x*.6;yy+=x*1.2;return y});
+    h+=`<g data-id="${b.id}" transform="translate(${b.x},${b.y})" style="cursor:${mode==='layout'&&!b.locked?'grab':'pointer'};opacity:${match(b)?1:.25}">`;
+    h+=`<circle class="ring" r="${r+8}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="6 5" display="${b.id===selId?'inline':'none'}"/>`;
+    h+=`<circle r="${r}" fill="${col(b)}" stroke="#7d8793" stroke-width="4"/>`;
+    if(b.type==='hopper')h+=`<circle r="${r*.58}" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="2" stroke-dasharray="4 3"/>`;
+    lines.forEach((t,i)=>h+=`<text y="${ys[i]}" text-anchor="middle" dominant-baseline="middle" font-size="${sz[i]}" font-weight="${i?600:700}" fill="#101810" stroke="rgba(255,255,255,.9)" stroke-width="${sz[i]*.3}" stroke-linejoin="round" paint-order="stroke">${esc(t)}</text>`);
+    if(mode==='layout'&&b.locked)h+=`<text x="${r*.72}" y="${-r*.72}" font-size="15" text-anchor="middle" dominant-baseline="middle">🔒</text>`;
+    h+='</g>';
+  });
+  binsg.innerHTML=h;
+  drawBg();
+  const all=F().bins.length&&F().bins.every(b=>b.locked);
+  $('lockall').textContent=all?'Unlock all':'Lock all';
+  $('snap').textContent='Snap to grid: '+(S.snap!==false?'On':'Off');
+  $('u-bu').setAttribute('aria-pressed',S.unit==='bu');$('u-t').setAttribute('aria-pressed',S.unit==='t');
+  if(view==='list')drawList();
+  updatePhotoUI();
+  $('undo').disabled=!undoS.some(u=>u.fid===S.farm);
+  $('bgbtn').textContent=F().bg?'Change yard photo':'Yard photo';
+}
+
+function panel(){
+  const b=F().bins.find(x=>x.id===sheetId),show=!!b,p=show?$('sheet'):$('panel');confirmDel=false;
+  $('sheetwrap').hidden=!show;
+  if(!show){
+    p.innerHTML=`<h2>Edit layout</h2><p class="hint">Drag an unlocked bin to place it, then lock it. Tap a bin to rename, resize, lock or remove it. Drag empty space to move around the map.</p>${photoHtml()}`;
+    photoBind();
+    return;
+  }
+  const c=b.crop||'Wheat',over=b.qty>b.cap;
+  p.innerHTML=`<h2>${esc(b.name)}</h2>
+  <div data-m="layout"><label for="f-name">Bin name</label><input id="f-name" value="${esc(b.name)}">
+  <div class="row"><div><label for="f-type">Type</label><select id="f-type"><option value="round">Flat bottom</option><option value="hopper">Hopper bottom</option></select></div>
+  <div><label for="f-cap">Capacity (${S.unit==='bu'?'bu':'t'})</label><input id="f-cap" type="number" min="1" step="any" value="${num(toU(b.cap,c))}"></div></div>
+  <div class="chips">${SIZES.map(s=>`<button data-size="${s}">${s.toLocaleString()} bu</button>`).join('')}</div>
+  <div class="actions"><button id="f-lock">${b.locked?'Unlock position':'Lock position'}</button><button id="f-copy">Copy bin</button><button id="f-del" class="danger">Remove bin</button></div></div>
+  <div><div><label for="f-crop">Crop</label><select id="f-crop"><option value="">Empty</option>${Object.keys(CROPS).map(k=>`<option>${k}</option>`).join('')}</select></div>
+  <div class="row"><div><label for="f-var">Variety</label><input id="f-var" value="${esc(b.variety)}"></div><div><label for="f-grade">Grade</label><input id="f-grade" value="${esc(b.grade)}"></div></div>
+  <label for="f-notes">Notes</label><textarea id="f-notes" rows="3">${esc(b.notes)}</textarea>
+  <div class="actions"><button id="f-empty">Empty bin</button></div>
+  <div class="hist"><label>Last updated: ${b.upd?fmtDate(b.upd):'never'}</label>${(b.hist||[]).length?'<ul>'+b.hist.slice(0,5).map(h=>`<li>${fmtDate(h.t)}: ${esc(h.x)}</li>`).join('')+'</ul>':''}</div></div>
+  <div class="foot"><button id="f-cancel">Cancel</button><button id="f-done" class="primary">Done</button></div>`;
+  $('f-type').value=b.type;$('f-crop').value=b.crop||'';
+  const on=(id,fn,ev='input')=>$(id).addEventListener(ev,fn);
+  const upd=()=>{touch(b);save();draw()};
+  on('f-name',e=>{b.name=e.target.value;upd();p.querySelector('h2').textContent=b.name});
+  on('f-type',e=>{b.type=e.target.value;upd()},'change');
+  on('f-crop',e=>{const o=b.crop||'Empty';b.crop=e.target.value;touch(b,'Crop: '+o+' to '+(b.crop||'Empty'));save();draw();panel()},'change');
+  on('f-cap',e=>{b.cap=Math.max(1,fromU(+e.target.value||1,c));upd()});
+  p.querySelectorAll('[data-size]').forEach(x=>x.onclick=()=>{b.cap=+x.dataset.size;save();draw();panel()});
+  on('f-var',e=>{b.variety=e.target.value;touch(b);save()});on('f-grade',e=>{b.grade=e.target.value;touch(b);save()});on('f-notes',e=>{b.notes=e.target.value;touch(b);save()});
+  $('f-copy').onclick=()=>{const id=Math.max(0,...F().bins.map(x=>x.id))+1;F().bins.push({...JSON.parse(JSON.stringify(b)),id,name:b.name+' copy',x:b.x+2*G,y:b.y+2*G,locked:false,hist:[],upd:Date.now()});save();openBin(id,true)};
+  $('f-lock').onclick=()=>{b.locked=!b.locked;save();draw();panel()};
+  $('f-empty').onclick=()=>{touch(b,'Emptied (was '+(b.crop||'Empty')+')');b.crop='';b.qty=0;b.variety='';b.grade='';save();draw();panel()};
+  const shut=()=>{sheetId=null;selId=null;isNew=null;orig=null;save();draw();panel()};
+  $('f-done').onclick=shut;
+  $('f-cancel').onclick=()=>{
+    if(isNew===b.id)F().bins=F().bins.filter(x=>x.id!==b.id);
+    else if(orig){const x=b.x,y=b.y;Object.assign(b,orig,{x,y})}
+    shut();
+  };
+  $('f-del').onclick=e=>{
+    if(!confirmDel){confirmDel=true;e.target.textContent=b.qty>0?'Bin has grain. Click again to remove':'Click again to remove';return}
+    F().bins=F().bins.filter(x=>x.id!==b.id);selId=null;sheetId=null;isNew=null;save();draw();panel();
+  };
+}
+
+const binsg=$('binsg'),bgg=$('bgg'),gridg=$('gridg'),V=()=>F().view;
+let photoMode=false,photoDrag=null;
+function initBgp(f){const w=Math.max(200,Math.round(svg.clientWidth/f.view.z*.9));
+  f.bgp={x:Math.round(f.view.x+20),y:Math.round(f.view.y+20),w,h:Math.round(w*.64),o:.75,base:w};
+  const im=new Image();im.onload=()=>{f.bgp.h=f.bgp.w*im.naturalHeight/im.naturalWidth;save();drawBg()};im.src=f.bg}
+function photoRect(){const f=F();if(f.bg&&!f.bgp)initBgp(f);return f.bgp||{x:0,y:0,w:1000,h:640,o:.75,base:1000}}
+function drawBg(){const f=F(),q=photoRect();
+  bgg.innerHTML=f.bg?`<image href="${f.bg}" x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}" preserveAspectRatio="none" opacity="${q.o}"/>`+(photoMode?`<rect x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="8 6" vector-effect="non-scaling-stroke"/>`:''):''}
+function photoHtml(){if(!F().bg)return'';return `<h2 style="margin-top:18px">Yard photo</h2><div class="actions"><button id="ph-adj">Adjust photo</button><button id="ph-del" class="danger">Remove photo</button></div>`}
+function togglePhoto(){photoMode=!photoMode;drawBg();updatePhotoUI()}
+function updatePhotoUI(){
+  const has=!!F().bg,on=has&&photoMode;
+  $('padj').hidden=!has;$('padj').textContent=on?'Done adjusting photo':'Adjust photo';
+  $('photobar').hidden=!on;
+  if(on){const q=photoRect(),pct=Math.round(q.w/q.base*100);$('pb-s').value=pct;$('pb-sl').textContent=pct;$('pb-o').value=Math.round(q.o*100)}
+}
+function photoBind(){const f=F();if(!f.bg)return;
+  $('ph-adj').onclick=togglePhoto;
+  $('ph-del').onclick=()=>{f.bg=null;f.bgp=null;photoMode=false;save();draw();panel()}}
+$('padj').onclick=togglePhoto;$('pb-done').onclick=togglePhoto;
+$('pb-s').oninput=e=>{const q=photoRect(),ar=q.h/q.w,cx=q.x+q.w/2,cy=q.y+q.h/2;q.w=q.base*e.target.value/100;q.h=q.w*ar;q.x=cx-q.w/2;q.y=cy-q.h/2;$('pb-sl').textContent=e.target.value;drawBg()};
+$('pb-o').oninput=e=>{photoRect().o=e.target.value/100;drawBg()};
+$('pb-s').onchange=save;$('pb-o').onchange=save;
+function setView(){const v=V(),w=svg.clientWidth||1000,h=svg.clientHeight||640;
+  svg.setAttribute('viewBox',`${v.x} ${v.y} ${w/v.z} ${h/v.z}`);
+  const vw=w/v.z,vh=h/v.z;let st=G;while(st*v.z<9)st*=5;const mj=st*5;let t='';
+  for(let x=Math.floor(v.x/st)*st;x<=v.x+vw;x+=st)t+=`<line x1="${x}" y1="${v.y}" x2="${x}" y2="${v.y+vh}" stroke="var(--grid)" stroke-width="${x%mj===0?1.8:1}" vector-effect="non-scaling-stroke"/>`;
+  for(let y=Math.floor(v.y/st)*st;y<=v.y+vh;y+=st)t+=`<line x1="${v.x}" y1="${y}" x2="${v.x+vw}" y2="${y}" stroke="var(--grid)" stroke-width="${y%mj===0?1.8:1}" vector-effect="non-scaling-stroke"/>`;
+  gridg.innerHTML=t}
+function zoomAt(cx,cy,nz){const r=svg.getBoundingClientRect(),v=V();nz=Math.max(.03,Math.min(3,nz));
+  const wx=v.x+(cx-r.left)/v.z,wy=v.y+(cy-r.top)/v.z;v.z=nz;v.x=wx-(cx-r.left)/nz;v.y=wy-(cy-r.top)/nz;setView()}
+const wp=e=>{const r=svg.getBoundingClientRect(),v=V();return{x:v.x+(e.clientX-r.left)/v.z,y:v.y+(e.clientY-r.top)/v.z}};
+const P=new Map();let pan=null,pinch=null;
+const two=()=>{const[a,b]=[...P.values()];return{d:Math.hypot(a.x-b.x,a.y-b.y),cx:(a.x+b.x)/2,cy:(a.y+b.y)/2}};
+svg.addEventListener('pointerdown',e=>{
+  if(e.isPrimary){P.clear();pinch=null;pan=null;drag=null;photoDrag=null;tap=null}
+  P.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  try{svg.setPointerCapture(e.pointerId)}catch(err){}
+  if(P.size===2){tap=null;drag=null;pan=null;photoDrag=null;pinch={d:two().d,z:V().z};return}
+  if(photoMode&&F().bg){const p=wp(e),q=photoRect();photoDrag={dx:p.x-q.x,dy:p.y-q.y};return}
+  const g=e.target.closest('[data-id]');
+  if(!g){pan={sx:e.clientX,sy:e.clientY,vx:V().x,vy:V().y,moved:false};return}
+  const b=F().bins.find(x=>x.id==g.dataset.id),was=selId;selId=b.id;
+  svg.querySelectorAll('.ring').forEach(r=>r.setAttribute('display',r.parentNode===g?'inline':'none'));
+  if(mode==='layout'&&!b.locked){e.preventDefault();const p=wp(e);drag={id:b.id,dx:p.x-b.x,dy:p.y-b.y,ox:b.x,oy:b.y}}
+  tap={id:b.id,x:e.clientX,y:e.clientY,moved:false};
+});
+svg.addEventListener('pointermove',e=>{
+  if(!P.has(e.pointerId))return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(tap&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)>6)tap.moved=true;
+  if(pinch&&P.size===2){const t=two();zoomAt(t.cx,t.cy,pinch.z*t.d/pinch.d);return}
+  if(photoDrag){const p=wp(e),q=photoRect();q.x=p.x-photoDrag.dx;q.y=p.y-photoDrag.dy;drawBg();return}
+  if(drag){
+    const b=F().bins.find(x=>x.id===drag.id),p=wp(e);let x=p.x-drag.dx,y=p.y-drag.dy;
+    if(!drag.pushed){undoS.push({fid:S.farm,id:b.id,x:drag.ox,y:drag.oy});if(undoS.length>50)undoS.shift();drag.pushed=true;$('undo').disabled=false}
+    if(S.snap!==false){x=Math.round(x/SNAP)*SNAP;y=Math.round(y/SNAP)*SNAP}
+    b.x=x;b.y=y;const g=binsg.querySelector(`[data-id="${b.id}"]`);if(g)g.setAttribute('transform',`translate(${x},${y})`);
+  }else if(pan){
+    const dx=e.clientX-pan.sx,dy=e.clientY-pan.sy,v=V();
+    if(Math.abs(dx)+Math.abs(dy)>4)pan.moved=true;
+    v.x=pan.vx-dx/v.z;v.y=pan.vy-dy/v.z;setView();
+  }
+});
+const endPtr=e=>{
+  P.delete(e.pointerId);if(P.size<2)pinch=null;
+  if(tap){const t=tap;tap=null;if(!t.moved&&e.type==='pointerup')openBin(t.id)}
+  if(pan){if(!pan.moved&&(selId||sheetId)){selId=null;sheetId=null;draw();panel()}pan=null}
+  drag=null;photoDrag=null;save();
+};
+svg.addEventListener('lostpointercapture',e=>{P.delete(e.pointerId);if(P.size<2)pinch=null});
+svg.addEventListener('pointerup',endPtr);svg.addEventListener('pointercancel',endPtr);
+svg.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,V().z*Math.exp(-e.deltaY*.0015));save()},{passive:false});
+svg.addEventListener('contextmenu',e=>e.preventDefault());
+const zc=f=>{const r=svg.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,V().z*f);save()};
+$('rc').onclick=()=>{
+  const r=svg.getBoundingClientRect(),v=V(),B=F().bins;let x0,x1,y0,y1;
+  if(B.length){x0=Math.min(...B.map(b=>b.x-rad(b)));x1=Math.max(...B.map(b=>b.x+rad(b)));y0=Math.min(...B.map(b=>b.y-rad(b)));y1=Math.max(...B.map(b=>b.y+rad(b)))}
+  else if(F().bg){const q=photoRect();x0=q.x;x1=q.x+q.w;y0=q.y;y1=q.y+q.h}
+  else{v.x=-40;v.y=-40;v.z=1;setView();save();return}
+  v.z=Math.max(.03,Math.min(1.5,r.width/(x1-x0+120),r.height/(y1-y0+120)));
+  v.x=(x0+x1)/2-r.width/v.z/2;v.y=(y0+y1)/2-r.height/v.z/2;setView();save();
+};
+$('zi').onclick=()=>zc(1.25);$('zo').onclick=()=>zc(.8);
+function applyTheme(){const t=S.theme||'auto',d=document.documentElement;
+  if(t==='auto')d.removeAttribute('data-theme');else d.dataset.theme=t;
+  ['auto','light','dark'].forEach(k=>$('th-'+k).setAttribute('aria-pressed',t===k))}
+['auto','light','dark'].forEach(k=>$('th-'+k).onclick=()=>{S.theme=k;save();applyTheme()});
+const bugText=()=>($('bug-text').value.trim()||'(describe the problem here)')+`\n\n---\nBinTrack report\nWhen: ${new Date().toISOString()}\nFarm: ${F().bins.length} bins, ${S.farms.length} farm(s)\nUnits: ${S.unit}, screen: ${S.theme||'auto'}\nWindow: ${innerWidth}x${innerHeight}\nBrowser: ${navigator.userAgent}`;
+const bugSync=()=>{$('bug-mail').href='mailto:?subject='+encodeURIComponent('BinTrack bug report')+'&body='+encodeURIComponent(bugText())};
+$('bug-open').onclick=()=>{const b=$('bugbox');b.hidden=!b.hidden;$('bug-msg').textContent='';bugSync();if(!b.hidden)$('bug-text').focus()};
+$('bug-text').oninput=bugSync;
+$('bug-copy').onclick=async()=>{const m=$('bug-msg');try{await navigator.clipboard.writeText(bugText());m.textContent='Copied. Paste it into a message.'}catch(e){$('bug-text').value=bugText();$('bug-text').select();m.textContent='Copy it from the box above.'}};
+let dl=null;
+try{if(window.claude&&claude.use)claude.use('downloads').then(d=>{dl=d})}catch(e){}
+const bmsg=t=>{$('bk-msg').textContent=t};
+async function saveFile(name,text){
+  if(dl){try{await dl.save({filename:name,data:text});bmsg('Saved '+name)}catch(e){bmsg(e&&e.code==='declined'?'Canceled.':'Could not save the file.')}}
+  else{try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/plain'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);bmsg('Saved '+name+' to your downloads.')}catch(e){bmsg('Could not save the file.')}}
+}
+const today=()=>new Date().toISOString().slice(0,10);
+$('bk-save').onclick=()=>saveFile('BinTrack-backup-'+today()+'.json',JSON.stringify({app:'BinTrack',v:1,saved:new Date().toISOString(),data:S}));
+let pendingRestore=null;
+$('bk-load').onclick=()=>{
+  if(pendingRestore){const j=pendingRestore.data;pendingRestore=null;$('bk-load').textContent='Restore backup';
+    S.farms=j.farms;S.unit=j.unit||'bu';S.snap=j.snap;S.theme=j.theme;S.farm=j.farms.some(x=>x.id===j.farm)?j.farm:j.farms[0].id;
+    S.farms.forEach(x=>{x.view=x.view||{x:-40,y:-40,z:1};x.bins=x.bins||[]});
+    undoS=[];sheetId=null;selId=null;save();applyTheme();fillFarms();setView();draw();panel();bmsg('Backup restored.');return}
+  $('bk-file').click()};
+$('bk-file').onchange=e=>{const fl=e.target.files[0];e.target.value='';if(!fl)return;const r=new FileReader();
+  r.onload=()=>{try{const j=JSON.parse(r.result);if(!j.data||!Array.isArray(j.data.farms)||!j.data.farms.length)throw 0;
+    pendingRestore=j;$('bk-load').textContent='Confirm restore';bmsg('Backup from '+(j.saved||'').slice(0,10)+' with '+j.data.farms.length+' farm(s). Tap Confirm restore to replace your current data.')}
+   catch(x){bmsg('That file is not a BinTrack backup.')}};
+  r.readAsText(fl)};
+const csv=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+$('rp-csv').onclick=()=>{
+  const rows=[['Farm','Bin','Type','Capacity (bu)','Capacity (tonnes)','Crop','Variety','Grade','Notes','Last updated']];
+  S.farms.forEach(fm=>fm.bins.forEach(b=>rows.push([fm.name,b.name,b.type==='hopper'?'Hopper bottom':'Flat bottom',Math.round(b.cap),(b.cap*wt(b.crop||'Wheat')/LB_T).toFixed(1),b.crop||'Empty',b.variety,b.grade,b.notes,b.upd?new Date(b.upd).toISOString().slice(0,10):''])));
+  saveFile('BinTrack-bins-'+today()+'.csv','\ufeff'+rows.map(r=>r.map(csv).join(',')).join('\r\n'))};
+$('rp-print').onclick=()=>{
+  const nf=v=>v.toLocaleString(undefined,{maximumFractionDigits:S.unit==='bu'?0:1})+(S.unit==='bu'?' bu':' t');
+  const body=S.farms.map(fm=>{const tot={};fm.bins.forEach(b=>{const c=b.crop||'Empty';tot[c]=(tot[c]||0)+toU(b.cap,b.crop||'Wheat')});
+    return `<h2>${esc(fm.name)}</h2><table><tr><th>Bin</th><th>Type</th><th>Crop</th><th>Variety</th><th>Grade</th><th>Capacity</th><th>Notes</th></tr>${fm.bins.map(b=>`<tr><td>${esc(b.name)}</td><td>${b.type==='hopper'?'Hopper':'Flat'}</td><td>${esc(b.crop||'Empty')}</td><td>${esc(b.variety)}</td><td>${esc(b.grade)}</td><td class="n">${nf(toU(b.cap,b.crop||'Wheat'))}</td><td>${esc(b.notes)}</td></tr>`).join('')}</table><p><strong>Capacity by crop:</strong> ${Object.keys(tot).sort().map(c=>esc(c)+' '+nf(tot[c])).join(', ')||'none'}</p>`}).join('');
+  saveFile('BinTrack-report-'+today()+'.html','<!doctype html><html><head><meta charset="utf-8"><title>BinTrack report</title><style>body{font:14px system-ui,sans-serif;margin:24px;color:#111}h1{font-size:22px}h2{font-size:17px;margin:22px 0 6px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbb;padding:5px 8px;text-align:left}th{background:#eee}.n{text-align:right}@media print{body{margin:0}}</style></head><body><h1>BinTrack report</h1><p>'+new Date().toLocaleDateString()+'</p>'+body+'</body></html>')};
+let sDel=false;
+function closePops(){$('bugbox').hidden=true;$('settings').hidden=true;$('farmpop').hidden=true;$('gear').setAttribute('aria-expanded',false);$('fedit').setAttribute('aria-expanded',false)}
+function openSettings(on){closePops();if(on){$('settings').hidden=false;$('gear').setAttribute('aria-expanded',true)}}
+function openFarmPop(on){closePops();if(on){$('s-name').value=F().name;$('s-del').disabled=S.farms.length<2;$('s-del').textContent='Delete farm';sDel=false;$('farmpop').hidden=false;$('fedit').setAttribute('aria-expanded',true);$('s-name').focus();$('s-name').select()}}
+$('gear').onclick=()=>openSettings($('settings').hidden);
+$('fedit').onclick=()=>openFarmPop($('farmpop').hidden);
+[$('gear'),$('fedit'),$('settings'),$('farmpop')].forEach(el=>el.addEventListener('pointerdown',e=>e.stopPropagation()));
+$('s-close').onclick=closePops;
+document.addEventListener('pointerdown',closePops);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePops()});
+const rename=()=>{F().name=$('s-name').value.trim()||F().name;save();fillFarms();if(sheetId==null)panel();closePops()};
+$('s-rename').onclick=rename;$('s-name').onkeydown=e=>{if(e.key==='Enter')rename()};
+$('s-del').onclick=e=>{
+  if(!sDel){sDel=true;e.target.textContent=F().bins.length?'Has '+F().bins.length+' bins. Click again to delete':'Click again to delete';return}
+  const gone=F();S.farms=S.farms.filter(x=>x!==gone);S.farm=S.farms[0].id;sheetId=null;selId=null;save();fillFarms();setView();draw();panel();closePops()};
+function fillFarms(){$('farm').innerHTML=S.farms.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join('')+'<option value="new">+ New farm</option>';$('farm').value=S.farm}
+$('farm').onchange=e=>{if(e.target.value==='new'){newFarm();return}sheetId=null;photoMode=false;S.farm=+e.target.value;selId=null;save();setView();draw();panel()};
+const newFarm=()=>{const id=Math.max(...S.farms.map(f=>f.id))+1;
+  photoMode=false;sheetId=null;S.farms.push({id,name:'Farm '+id,bg:null,bins:[],view:{x:-40,y:-40,z:1}});S.farm=id;selId=null;save();fillFarms();setView();draw();panel();openFarmPop(true)};
+
+function totalsHtml(){
+  const tot={};let used=0;
+  F().bins.forEach(x=>{if(x.crop){tot[x.crop]=(tot[x.crop]||0)+toU(x.cap,x.crop);used+=toU(x.cap,x.crop)}});
+  const u=S.unit==='bu'?' bu':' t',f=v=>v.toLocaleString(undefined,{maximumFractionDigits:S.unit==='bu'?0:1})+u;
+  const capU=F().bins.reduce((a,x)=>a+toU(x.cap,x.crop||'Wheat'),0);
+  const rows=Object.keys(tot).sort().map(c=>`<tr><td><span class="sw" style="background:${CROPS[c]?CROPS[c][1]:EMPTY}"></span>${esc(c)}</td><td>${f(tot[c])}</td></tr>`).join('');
+  return `<h2>${esc(F().name)} totals</h2><table>${rows||'<tr><td>No crops assigned yet</td><td></td></tr>'}
+    <tr><td><strong>Capacity in use</strong></td><td><strong>${f(used)}</strong></td></tr>
+    <tr><td>Total capacity</td><td>${f(capU)}</td></tr>
+    <tr><td>Bins</td><td>${F().bins.length}</td></tr></table>
+    <p class="hint">Tonnes are converted using each crop's bushel weight.</p>`}
+const fmtDate=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+const touch=(b,msg)=>{b.upd=Date.now();if(msg){b.hist=b.hist||[];b.hist.unshift({t:b.upd,x:msg});b.hist.length=Math.min(b.hist.length,30)}};
+const match=b=>!cropFilter||(cropFilter==='Empty'?!b.crop:b.crop===cropFilter);
+const rowHtml=b=>`<li><button class="binrow" data-id="${b.id}"><span class="sw" style="background:${col(b)}"></span><span class="bn">${esc(b.name)}</span><span class="bc">${esc(b.crop||'Empty')}${b.variety?', '+esc(b.variety):''}${b.grade?', '+esc(b.grade):''}${b.upd?', updated '+fmtDate(b.upd):''}</span><span class="bq">${fmt(b.cap,b.crop||'Wheat')}</span></button></li>`;
+function drawList(){
+  const all=F().bins,avail=[...new Set(all.map(b=>b.crop||'Empty'))].sort();
+  if(cropFilter&&!avail.includes(cropFilter))cropFilter='';
+  const B=all.filter(match).sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+  const chips=all.length?`<div class="chips" style="margin:0 0 12px"><button data-crop="*" class="${cropFilter?'':'primary'}">All</button>${avail.map(c=>`<button data-crop="${esc(c)}" class="${cropFilter===c?'primary':''}">${esc(c)}</button>`).join('')}</div>`:'';
+  $('listv').innerHTML=totalsHtml()+`<h2 style="margin-top:22px">${cropFilter?esc(cropFilter)+' bins':'All bins'} (${B.length})</h2>`+chips+(B.length?'<ul>'+B.map(rowHtml).join('')+'</ul>':'<p class="hint">No bins yet. Tap Map, then Edit layout, then Add bin.</p>')}
+$('listv').onclick=e=>{const c=e.target.closest('[data-crop]');if(c){cropFilter=c.dataset.crop==='*'?'':c.dataset.crop;draw();return}const r=e.target.closest('[data-id]');if(r)openBin(+r.dataset.id)};
+function showTab(t){
+  if(t==='list'&&mode!=='home')setMode('home');
+  view=t;document.body.dataset.view=t;sheetId=null;selId=null;
+  $('t-map').setAttribute('aria-pressed',t==='map');$('t-list').setAttribute('aria-pressed',t==='list');
+  $('listv').hidden=t!=='list';document.querySelector('main').hidden=t!=='map';
+  if(t==='map')setView();
+  draw();panel();
+}
+$('t-map').onclick=()=>showTab('map');$('t-list').onclick=()=>showTab('list');
+function setMode(m){mode=m;document.body.dataset.mode=m;sheetId=null;selId=null;photoMode=false;save();draw();panel()}
+$('editlayout').onclick=()=>setMode('layout');$('exitlayout').onclick=()=>setMode('home');
+function openBin(id,nw){selId=id;sheetId=id;isNew=nw?id:null;orig=JSON.parse(JSON.stringify(F().bins.find(x=>x.id===id)));draw();panel()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheetId!=null){const c=$('f-cancel');if(c)c.click()}});
+$('undo').onclick=()=>{
+  for(let i=undoS.length-1;i>=0;i--){const u=undoS[i];if(u.fid!==S.farm)continue;undoS.splice(i,1);const b=F().bins.find(x=>x.id===u.id);if(b){b.x=u.x;b.y=u.y;save();draw();return}}
+  draw()};
+$('add').onclick=()=>{
+  const n=Math.max(1,Math.min(20,parseInt($('addn').value)||1));
+  if(n>1){
+    const cx=V().x+svg.clientWidth/V().z/2,cy=V().y+svg.clientHeight/V().z/2,cols=Math.min(n,5),sp=90;let id=Math.max(0,...F().bins.map(b=>b.id));
+    for(let i=0;i<n;i++){id++;F().bins.push({id,name:'Bin '+id,type:'round',cap:3000,x:Math.round((cx+((i%cols)-(cols-1)/2)*sp)/G)*G,y:Math.round((cy+(Math.floor(i/cols)-(Math.ceil(n/cols)-1)/2)*sp)/G)*G,locked:false,crop:'',qty:0,variety:'',grade:'',notes:''})}
+    $('addn').value=1;save();draw();return}
+  const id=Math.max(0,...F().bins.map(b=>b.id))+1;
+  F().bins.push({id,name:'Bin '+id,type:'round',cap:3000,x:Math.round((V().x+svg.clientWidth/V().z/2)/G)*G,y:Math.round((V().y+svg.clientHeight/V().z/2)/G)*G,locked:false,crop:'',qty:0,variety:'',grade:'',notes:''});
+  save();openBin(id,true);
+};
+$('snap').onclick=()=>{S.snap=S.snap===false;save();draw();if(selId)panel()};
+$('lockall').onclick=()=>{const all=F().bins.every(b=>b.locked);F().bins.forEach(b=>b.locked=!all);save();draw();if(selId)panel()};
+const setU=u=>{S.unit=u;save();draw();panel()};
+$('u-bu').onclick=()=>setU('bu');$('u-t').onclick=()=>setU('t');
+$('bgbtn').onclick=()=>$('bgfile').click();
+$('bgfile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{F().bg=r.result;F().bgp=null;photoMode=false;save();draw();panel()};r.readAsDataURL(f);
+};
+applyTheme();fillFarms();setView();draw();panel();window.addEventListener('resize',setView);
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
